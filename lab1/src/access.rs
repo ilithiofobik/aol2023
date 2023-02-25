@@ -5,6 +5,7 @@ pub trait Accessible {
     fn access(&mut self, search: usize) -> usize;
 }
 
+#[derive(Clone)]
 pub struct SimpleList {
     list: Vec<usize>
 }
@@ -26,6 +27,8 @@ impl Accessible for SimpleList {
         }
     }
 }
+
+#[derive(Clone)]
 
 pub struct MtfList {
     list: VecDeque<usize>
@@ -52,6 +55,8 @@ impl Accessible for MtfList {
         }
     }
 }
+
+#[derive(Clone)]
 
 pub struct TransList {
     list: Vec<usize>
@@ -80,6 +85,7 @@ impl Accessible for TransList {
     }
 }
 
+#[derive(Clone)]
 pub struct CountList {
     list: Vec<(usize, usize)>
 }
@@ -105,6 +111,30 @@ impl Accessible for CountList {
                 self.list.push((1, search));
                 self.list.len() - 1
             }
+        }
+    }
+}
+
+#[derive(Clone)]
+
+pub enum AccessList {
+    SimpleList(SimpleList),
+    MtfList(MtfList),
+    TransList(TransList),
+    CountList(CountList)
+}
+
+impl Accessible for AccessList {
+    fn new() -> Self {
+        AccessList::SimpleList(SimpleList::new())
+    }
+
+    fn access(&mut self, search: usize) -> usize {
+        match self {
+            AccessList::SimpleList(list)=> list.access(search),
+            AccessList::MtfList(list)      => list.access(search),
+            AccessList::TransList(list)  => list.access(search),
+            AccessList::CountList(list)  => list.access(search)
         }
     }
 }

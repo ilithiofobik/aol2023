@@ -1,5 +1,7 @@
 use rand::{thread_rng, Rng};
 
+#[derive(Clone)]
+
 pub struct Distribution {
     dist_vec: Vec<f64>,
     pub generator: rand::rngs::ThreadRng
