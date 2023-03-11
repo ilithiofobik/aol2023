@@ -1,15 +1,33 @@
 use rand::{thread_rng, Rng};
 
 #[derive(Clone)]
+pub struct UniDistribution {
+    max_int: usize,
+    pub generator: rand::rngs::ThreadRng
+}
 
-pub struct Distribution {
+impl UniDistribution {
+    pub fn new(max_int: usize) -> Self {
+        UniDistribution {
+            max_int,
+            generator: thread_rng()
+        }
+    }
+
+    fn generate(&mut self) -> usize {
+        self.generator.gen_range(1..=self.max_int)
+    }
+}
+
+#[derive(Clone)]
+pub struct ArrDistribution {
     dist_vec: Vec<f64>,
     pub generator: rand::rngs::ThreadRng
 }
 
-impl Distribution {
+impl ArrDistribution {
     fn new(dist_vec: Vec<f64>) -> Self {
-        Distribution {
+        ArrDistribution {
             dist_vec,
             generator: thread_rng()
         }
@@ -18,16 +36,6 @@ impl Distribution {
     pub fn generate(&mut self) -> usize {
         let r = self.generator.gen_range(0.0..1.0);
         self.dist_vec.iter().position(|&x| x > r).unwrap()
-    }
-
-    pub fn uniform(max_int: usize) -> Self {
-        let max_float = max_int as f64;
-        let mut dist_vec: Vec<f64> =
-            (0..=max_int)
-            .map(|x| x as f64 / max_float)
-            .collect();
-        dist_vec[max_int] = 1.0;
-        Self::new(dist_vec)
     }
 
     pub fn harmonic(max_int: usize) -> Self {
@@ -55,16 +63,50 @@ impl Distribution {
         dist_vec[max_int] = 1.0;
         Self::new(dist_vec)
     }
+}
 
-    pub fn geometric(max_int: usize) -> Self {
-        let mut dist_vec: Vec<f64> = vec![0.0; max_int + 1];
-        dist_vec[max_int] = 1.0;
-        for i in (1..max_int).rev() {
-            let two_pow_i: f64 = 2.0f64.powi(-1 * i as i32);
-            for j in i..max_int {
-                dist_vec[j] += two_pow_i;
-            }
+
+#[derive(Clone)]
+pub struct GeoDistribution {
+    p : f64,
+    max_int: usize,
+    pub generator: rand::rngs::ThreadRng
+}
+
+impl GeoDistribution {
+    pub fn new(p: f64, max_int: usize) -> Self {
+        GeoDistribution {
+            p,
+            max_int,
+            generator: thread_rng()
         }
-        Self::new(dist_vec)
+    }
+
+    pub fn generate(&mut self) -> usize {
+        let mut count = 1;
+        for _ in 1..self.max_int {
+            if self.generator.gen_bool(self.p) {
+                return count
+            }
+            count += 1;
+        }
+        count
+    }
+}
+
+#[derive(Clone)]
+pub enum Distribution {
+    UniDistribution(UniDistribution),
+    ArrDistribution(ArrDistribution),
+    GeoDistribution(GeoDistribution)
+}
+
+impl Distribution {
+    pub fn generate(&mut self) -> usize {
+        match self {
+            Distribution::UniDistribution(dist) => dist.generate(),
+            Distribution::ArrDistribution(dist) => dist.generate(),
+            Distribution::GeoDistribution(dist) => dist.generate()
+        }
     }
 }

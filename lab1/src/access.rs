@@ -1,17 +1,12 @@
 use std::collections::VecDeque;
 
-pub trait Accessible {
-    fn new() -> Self;
-    fn access(&mut self, search: usize) -> usize;
-}
-
 #[derive(Clone)]
 pub struct SimpleList {
     list: Vec<usize>
 }
 
-impl Accessible for SimpleList {
-    fn new() -> Self {
+impl SimpleList {
+    pub fn new() -> Self {
         SimpleList {
             list: Vec::new()
         }
@@ -34,8 +29,8 @@ pub struct MtfList {
     list: VecDeque<usize>
 }
 
-impl Accessible for MtfList {
-    fn new() -> Self {
+impl MtfList {
+    pub fn new() -> Self {
         MtfList {
             list: VecDeque::new()
         }
@@ -62,8 +57,8 @@ pub struct TransList {
     list: Vec<usize>
 }
 
-impl Accessible for TransList {
-    fn new() -> Self {
+impl TransList {
+    pub fn new() -> Self {
         TransList {
             list: Vec::new()
         }
@@ -90,8 +85,8 @@ pub struct CountList {
     list: Vec<(usize, usize)>
 }
 
-impl Accessible for CountList {
-    fn new() -> Self {
+impl CountList {
+    pub fn new() -> Self {
         CountList {
             list: Vec::new()
         }
@@ -124,12 +119,8 @@ pub enum AccessList {
     CountList(CountList)
 }
 
-impl Accessible for AccessList {
-    fn new() -> Self {
-        AccessList::SimpleList(SimpleList::new())
-    }
-
-    fn access(&mut self, search: usize) -> usize {
+impl AccessList {
+    pub fn access(&mut self, search: usize) -> usize {
         match self {
             AccessList::SimpleList(list)=> list.access(search),
             AccessList::MtfList(list)      => list.access(search),
