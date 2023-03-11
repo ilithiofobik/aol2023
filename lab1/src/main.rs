@@ -28,17 +28,17 @@ fn main() {
     let num_of_exps = 100;
     
     let distributions = [
-        ("uniform",    Distribution::UniDistribution(UniDistribution::new(max_int))),
-        ("harmonic",   Distribution::ArrDistribution(ArrDistribution::harmonic(max_int))),
-        ("biharmonic", Distribution::ArrDistribution(ArrDistribution::biharmonic(max_int))),
-        ("geometric",  Distribution::GeoDistribution(GeoDistribution::new(0.5, max_int)))
+        ("uniform",    Distribution::Uni(UniDistribution::new(max_int))),
+        ("harmonic",   Distribution::Arr(ArrDistribution::harmonic(max_int))),
+        ("biharmonic", Distribution::Arr(ArrDistribution::biharmonic(max_int))),
+        ("geometric",  Distribution::Geo(GeoDistribution::new(0.5, max_int)))
     ];
 
     let access_types = [
-        ("SimpleList",  AccessList::SimpleList(SimpleList::new())),
-        ("TransList",   AccessList::TransList(TransList::new())),
-        ("MoveToFront", AccessList::MtfList(MtfList::new())),
-        ("Count",       AccessList::CountList(CountList::new()))
+        ("SimpleList",  AccessList::Simple(SimpleList::new())),
+        ("TransList",   AccessList::Trans(TransList::new())),
+        ("MoveToFront", AccessList::Mtf(MtfList::new())),
+        ("Count",       AccessList::Count(CountList::new()))
     ];
 
     for (access_name, access) in access_types.iter() {

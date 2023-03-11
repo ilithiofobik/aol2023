@@ -113,19 +113,19 @@ impl CountList {
 #[derive(Clone)]
 
 pub enum AccessList {
-    SimpleList(SimpleList),
-    MtfList(MtfList),
-    TransList(TransList),
-    CountList(CountList)
+    Simple(SimpleList),
+    Mtf(MtfList),
+    Trans(TransList),
+    Count(CountList)
 }
 
 impl AccessList {
     pub fn access(&mut self, search: usize) -> usize {
         match self {
-            AccessList::SimpleList(list)=> list.access(search),
-            AccessList::MtfList(list)      => list.access(search),
-            AccessList::TransList(list)  => list.access(search),
-            AccessList::CountList(list)  => list.access(search)
+            AccessList::Simple(list)=> list.access(search),
+            AccessList::Mtf(list)      => list.access(search),
+            AccessList::Trans(list)  => list.access(search),
+            AccessList::Count(list)  => list.access(search)
         }
     }
 }

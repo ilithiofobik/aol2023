@@ -96,17 +96,17 @@ impl GeoDistribution {
 
 #[derive(Clone)]
 pub enum Distribution {
-    UniDistribution(UniDistribution),
-    ArrDistribution(ArrDistribution),
-    GeoDistribution(GeoDistribution)
+    Uni(UniDistribution),
+    Arr(ArrDistribution),
+    Geo(GeoDistribution)
 }
 
 impl Distribution {
     pub fn generate(&mut self) -> usize {
         match self {
-            Distribution::UniDistribution(dist) => dist.generate(),
-            Distribution::ArrDistribution(dist) => dist.generate(),
-            Distribution::GeoDistribution(dist) => dist.generate()
+            Distribution::Uni(dist) => dist.generate(),
+            Distribution::Arr(dist) => dist.generate(),
+            Distribution::Geo(dist) => dist.generate()
         }
     }
 }
