@@ -110,7 +110,7 @@ impl CountList {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone,)]
 
 pub enum AccessList {
     Simple(SimpleList),
@@ -126,6 +126,15 @@ impl AccessList {
             AccessList::Mtf(list)      => list.access(search),
             AccessList::Trans(list)  => list.access(search),
             AccessList::Count(list)  => list.access(search)
+        }
+    }
+
+    pub fn name(& self) -> String {
+        match self {
+            AccessList::Simple(_) => "simple".to_owned(),
+            AccessList::Mtf(_)    => "mtf".to_owned(),
+            AccessList::Trans(_)  => "trans".to_owned(),
+            AccessList::Count(_)  => "count".to_owned()
         }
     }
 }

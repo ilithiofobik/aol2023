@@ -97,7 +97,8 @@ impl GeoDistribution {
 #[derive(Clone)]
 pub enum Distribution {
     Uni(UniDistribution),
-    Arr(ArrDistribution),
+    Har(ArrDistribution),
+    Bih(ArrDistribution),
     Geo(GeoDistribution)
 }
 
@@ -105,8 +106,18 @@ impl Distribution {
     pub fn generate(&mut self) -> usize {
         match self {
             Distribution::Uni(dist) => dist.generate(),
-            Distribution::Arr(dist) => dist.generate(),
+            Distribution::Har(dist) => dist.generate(),
+            Distribution::Bih(dist) => dist.generate(),
             Distribution::Geo(dist) => dist.generate()
+        }
+    }
+
+    pub fn name(& self) -> String {
+        match self {
+            Distribution::Uni(_) => "uniform".to_owned(),
+            Distribution::Har(_) => "harmonic".to_owned(),
+            Distribution::Bih(_) => "biharmonic".to_owned(),
+            Distribution::Geo(_) => "geometric".to_owned()
         }
     }
 }
