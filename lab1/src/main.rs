@@ -9,6 +9,17 @@ use distribution::*;
 use access::*;
 use plots::*;
 
+#[derive(PartialEq, Eq, Hash)]
+pub struct AccessDistr {
+    access : String,
+    distr  : String
+}
+
+pub enum Condition {
+    Access,
+    Distribution
+}
+
 fn experiment(num_of_tests: usize, dist: &mut Distribution, access: &mut AccessList) -> f64 {
     let mut count = 0;
     for _ in 0..num_of_tests {
@@ -29,7 +40,7 @@ fn multi_experiment(num_of_exps: usize, num_of_tests: usize, dist: &mut Distribu
 fn main() {
     let max_int = 100;
     let test_nums = [100, 500, 1_000, 5_000, 10_000, 50_000, 100_000];
-    let num_of_exps = 1;
+    let num_of_exps = 100;
     
     let distributions = [
         Distribution::Uni(UniDistribution::new(max_int)),
@@ -45,7 +56,7 @@ fn main() {
         AccessList::Count(CountList::new())
     ];
 
-    let mut plot_data = HashMap::<(String, String), Vec<f64>>::new();
+    let mut plot_data = HashMap::<AccessDistr, Vec<f64>>::new();
 
     for access in access_types.iter() {
         for dist in distributions.iter() {
@@ -60,12 +71,13 @@ fn main() {
                 )
                 .collect();
 
-            let access_name = access.name();
-            let dist_name = dist.name();
+            let access = access.name();
+            let distr = dist.name();
+            let access_distr = AccessDistr { access, distr };
             
-            plot_data.insert((access_name, dist_name), y_data);
+            plot_data.insert(access_distr, y_data);
         }
     }
 
-    plot().unwrap();
+    plot(plot_data, test_nums.to_vec()).unwrap();
 }
