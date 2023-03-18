@@ -15,8 +15,10 @@ pub fn plot(plot_data : HashMap::<AccessDistr, Vec<f64>>, test_nums: Vec<usize>)
     let x_values_len = test_nums.len();
     let colors = vec![BLUE, RED, GREEN, YELLOW, CYAN, MAGENTA];
     let colors_len = colors.len();
+    let key_points = test_nums.iter().map(|x| *x as f32).collect::<Vec<f32>>();
 
     for (_, access) in accesses.iter() {
+        
         let out_file_name = format!("data/{}.png", access);
         let caption = format!("{} access", access);
         let root = BitMapBackend::new(&out_file_name, (1024, 768)).into_drawing_area();
@@ -36,14 +38,16 @@ pub fn plot(plot_data : HashMap::<AccessDistr, Vec<f64>>, test_nums: Vec<usize>)
             .right_y_label_area_size(40)
             .margin(5)
             .caption(caption, ("sans-serif", 50.0).into_font())
-            .build_cartesian_2d(((min_x_value - 1) as f32..(max_x_value + 1) as f32).log_scale(), 0.0f32..(*max_y) as f32)?;
+            .build_cartesian_2d(
+                ((min_x_value - 1) as f32..(max_x_value + 1) as f32).log_scale().with_key_points(key_points.clone()), 
+                0.0f32..(*max_y) as f32
+            )?;
 
         chart
             .configure_mesh()
             .disable_x_mesh()
             .disable_y_mesh()
             .y_desc("Average num of steps")
-            .y_label_formatter(&|x| format!("{:e}", x))
             .draw()?;
        
         for (idx, distr) in distrs.iter() {
@@ -53,7 +57,7 @@ pub fn plot(plot_data : HashMap::<AccessDistr, Vec<f64>>, test_nums: Vec<usize>)
             chart
             .draw_series(LineSeries::new(
                 (0..x_values_len).map(|x| (test_nums[x] as f32, y_data[x] as f32)),
-                &colors[*idx % colors_len],
+                (&colors[*idx % colors_len]).stroke_width(3),
             ))?
             .label(label)
             .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &colors[*idx % colors_len]));
@@ -92,14 +96,16 @@ pub fn plot(plot_data : HashMap::<AccessDistr, Vec<f64>>, test_nums: Vec<usize>)
             .right_y_label_area_size(40)
             .margin(5)
             .caption(caption, ("sans-serif", 50.0).into_font())
-            .build_cartesian_2d(((min_x_value - 1) as f32..(max_x_value + 1) as f32).log_scale(), 0.0f32..(*max_y) as f32)?;
+            .build_cartesian_2d(
+                ((min_x_value - 1) as f32..(max_x_value + 1) as f32).log_scale().with_key_points(key_points.clone()), 
+                0.0f32..(*max_y) as f32
+            )?;
 
         chart
             .configure_mesh()
             .disable_x_mesh()
             .disable_y_mesh()
             .y_desc("Average num of steps")
-            .y_label_formatter(&|x| format!("{:e}", x))
             .draw()?;
        
         for (idx, access) in accesses.iter() {
@@ -109,7 +115,7 @@ pub fn plot(plot_data : HashMap::<AccessDistr, Vec<f64>>, test_nums: Vec<usize>)
             chart
             .draw_series(LineSeries::new(
                 (0..x_values_len).map(|x| (test_nums[x] as f32, y_data[x] as f32)),
-                &colors[*idx % colors_len],
+                (&colors[*idx % colors_len]).stroke_width(3),
             ))?
             .label(label)
             .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &colors[*idx % colors_len]));
