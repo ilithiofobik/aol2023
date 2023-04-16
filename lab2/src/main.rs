@@ -4,9 +4,12 @@ mod distribution;
 use cache::*;
 use distribution::*;
 
+use std::fs::File;
+use std::io::prelude::*;
+
 fn experiment() {
     let mut rand = rand::thread_rng();
-    let num_of_tests = 100_000;
+    let num_of_tests = 1_000_000;
     let ns = [20, 30, 40, 50, 60, 70, 80, 90, 100];
     let cache_types = [
         CacheType::Fifo, 
@@ -25,21 +28,20 @@ fn experiment() {
                 Distribution::Geo(GeoDistribution::new(0.5, n))
             ];
         let ks = ((n / 10)..=(n / 5)).collect::<Vec<usize>>();
-        for k in ks {   
-            for distribution in distributions.iter_mut() {
-                for cache_type in cache_types {
-                    let mut cache = Cache::new(n, k, cache_type); 
+        for distribution in distributions.iter_mut() { 
+            for cache_type in cache_types {
+                let filename = format!("data/n_{}dist_{}cache_{}.txt", n, distribution.name(), cache_type.name());
+                let mut file = File::create(filename).unwrap();
+                for k in ks.iter() {
+                    let mut cache = Cache::new(n, *k, cache_type); 
                     let mut sum = 0;
                     for _ in 0..num_of_tests {
                         sum += cache.get_page(distribution.generate(), &mut rand);
                     }
-                    // println!(
-                    //     "n: {}, k: {}, distribution: {}, cache: {}, cost: {}", 
-                    //     n, 
-                    //     k, 
-                    //     distribution.name(), 
-                    //     cache_type.name(), 
-                    //     sum as f64 / num_of_tests as f64);
+                    let avg = sum as f64 / num_of_tests as f64;
+
+                    let line = format!("{};{}\n", k, avg);
+                    file.write(line.as_bytes()).unwrap();
                 }
             }
         }

@@ -1,4 +1,4 @@
-use rand::{thread_rng, Rng};
+use rand::{Rng};
 use std::{collections::HashSet, vec};
 
 #[derive(Clone, Copy)]
@@ -25,7 +25,6 @@ impl CacheType {
 }
 
 pub struct Cache {
-    n            : usize,
     k            : usize,
     cache_type   : CacheType,
     set_cache    : HashSet<usize>,
@@ -43,7 +42,6 @@ impl Cache {
         };
 
         Cache {
-            n,
             k,
             cache_type,
             set_cache : HashSet::new(),
