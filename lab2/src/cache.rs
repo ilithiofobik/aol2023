@@ -1,119 +1,174 @@
 use rand::{thread_rng, Rng};
+use std::{collections::HashSet, vec};
 
 #[derive(Clone, Copy)]
 pub enum CacheType {
-    FIFO, 
-    FWF, 
-    LRU, 
-    LFU, 
-    RAND, 
-    RMA
+    Fifo, 
+    Fwf, 
+    Lru, 
+    Lfu, 
+    Rand, 
+    Rma
 }
 
+impl CacheType {
+    pub fn name(&self) -> &str {
+        match self {
+            CacheType::Fifo => "FIFO",
+            CacheType::Fwf  => "FWF",
+            CacheType::Lru  => "LRU",
+            CacheType::Lfu  => "LFU",
+            CacheType::Rand => "RAND",
+            CacheType::Rma  => "RMA"
+        }
+    }
+}
 
 pub struct Cache {
     n            : usize,
     k            : usize,
     cache_type   : CacheType,
-    step_counter : usize,
-    aux_counter  : usize,
-    cache        : Vec<usize>,
-    add_mem      : Vec<usize>,
-    rnd_gen      : Option<rand::rngs::ThreadRng>
+    set_cache    : HashSet<usize>,
+    fifo_pointer : usize,
+    lru_counter  : usize,
+    add_arr      : Vec<usize>,
 }
 
 impl Cache {
     pub fn new(n: usize, k : usize, cache_type : CacheType) -> Self {
-        match cache_type {
-            CacheType::FIFO => {
-                Cache {
-                    n,
-                    k,
-                    cache_type,
-                    step_counter : 0,
-                    aux_counter : 0,
-                    cache    : vec![0; k],
-                    add_mem  : Vec::new(),
-                    rnd_gen  : None
-                }
-            },
-            CacheType::FWF | CacheType::LRU => {
-                Cache {
-                    n,
-                    k,
-                    cache_type,
-                    step_counter : 0,
-                    aux_counter : 0,
-                    cache    : vec![0; n],
-                    add_mem  : Vec::new(),
-                    rnd_gen  : None
-                }
-            },
-            _ => {
-                Cache {
-                    n,
-                    k,
-                    cache_type,
-                    step_counter : 0,
-                    aux_counter : 0,
-                    cache    : vec![0; k],
-                    add_mem  : Vec::new(),
-                    rnd_gen  : Some(thread_rng())
-                }
-            },
+        let add_arr = match cache_type {
+            CacheType::Fifo => vec![0; k], // to keep track of the order of pages
+            CacheType::Lru | CacheType::Lfu | CacheType::Rma => vec![0; n + 1], // to keep additional info
+            _ => vec![0; 0]
+        };
+
+        Cache {
+            n,
+            k,
+            cache_type,
+            set_cache : HashSet::new(),
+            fifo_pointer : 0,
+            add_arr,
+            lru_counter : 0,
         }
     }
 
-    fn fifo_cost(&mut self, page: usize) -> usize {
-        if self.cache.contains(&page) {
-            0
-        } else {
-            self.cache[self.aux_counter] = page;
-            self.aux_counter = (self.aux_counter + 1) % self.k;
-            1
-        }
-    }
-
-    fn fwf_cost(&mut self, page: usize) -> usize {
-        if self.cache[page] == 1 {
-            0
-        } else {
-            if self.aux_counter == self.k {
-                self.cache = vec![0; self.n];
-                self.cache[page] = 1;
-                self.aux_counter = 1;
-            } else {
-                self.cache[page] = 1;
-                self.aux_counter += 1;
-            }
-            1
-        }
-    }
-
-    fn lru_cost(&mut self, page: usize) -> usize {       
-        if self.cache[page] == 1 {
-            0
-        } else {
-            self.step_counter += 1;
-            if self.aux_counter == self.k {
-                self.cache = vec![0; self.n];
-                self.cache[page] = 1;
-                self.aux_counter = 1;
-            } else {
-                self.cache[page] = 1;
-                self.aux_counter += 1;
-            }
-            1
-        }
-    }
-
-    pub fn page_cost (&mut self, page : usize) -> usize {
+    fn fifo_add(&mut self, page: usize) {
+        // removing
+        let to_remove = self.add_arr[self.fifo_pointer];
+        self.set_cache.remove(&to_remove);
+        //adding
+        self.add_arr[self.fifo_pointer] = page;
+        self.set_cache.insert(page);
         
-        match self.cache_type {
-            CacheType::FIFO => self.fifo_cost(page),
-            CacheType::FWF  => self.fwf_cost(page),
-            CacheType::LRU  => self.lru_cost(page),
-            _ => 1,
+        self.fifo_pointer = (self.fifo_pointer + 1) % self.k;
+    }
+
+    fn fwf_add(&mut self, page: usize) {
+        // removing
+        if self.set_cache.len() == self.k {
+            self.set_cache.clear();
+        }
+        // adding
+        self.set_cache.insert(page);
+    }
+
+    fn rand_add(&mut self, page: usize, rand: &mut rand::rngs::ThreadRng) {
+        // removing
+        if self.set_cache.len() == self.k {
+            let rand_idx = (*rand).gen_range(0..self.k);
+            let rand_page = *self.set_cache.iter().nth(rand_idx).unwrap();
+            self.set_cache.remove(&rand_page);
+        }
+        // adding
+        self.set_cache.insert(page);
+    }
+
+    fn lru_update(&mut self, page: usize) {
+        self.lru_counter += 1;
+        self.add_arr[page] = self.lru_counter;
+    }
+
+    fn lru_add(&mut self, page: usize) {     
+        self.lru_update(page);
+
+        // remove
+        if self.set_cache.len() == self.k {
+            let lr_page =
+                *self.set_cache
+                .iter()
+                .min_by_key(|&v| self.add_arr[*v])
+                .unwrap();
+            self.set_cache.remove(&lr_page);
+        }
+        // add
+        self.set_cache.insert(page);
+    }
+
+    fn lfu_update(&mut self, page: usize) {
+        self.add_arr[page] += 1;
+    }
+
+    fn lfu_add(&mut self, page: usize) {   
+        self.lfu_update(page);
+
+        // remove
+        if self.set_cache.len() == self.k {
+            let lf_page =
+                *self.set_cache
+                .iter()
+                .min_by_key(|&v| self.add_arr[*v])
+                .unwrap();
+            self.set_cache.remove(&lf_page);
+        }
+
+        // add
+        self.set_cache.insert(page);
+    }
+
+    fn rma_update(&mut self, page: usize) {
+        self.add_arr[page] = 1;
+    }
+
+    fn rma_add(&mut self, page: usize, rand: &mut rand::rngs::ThreadRng) { 
+        // remove 
+        if self.set_cache.len() == self.k {
+             // unmark if all marked
+            if self.set_cache.iter().all(|&v| self.add_arr[v] == 1) {
+                for page in self.set_cache.iter() {
+                    self.add_arr[*page] = 0;
+                }
+            }
+
+            let unmarked_count = self.set_cache.iter().filter(|&v| self.add_arr[*v] == 0).count();
+            let rand_idx = (*rand).gen_range(0..unmarked_count);
+            let rand_page = *self.set_cache.iter().filter(|&v| self.add_arr[*v] == 0).nth(rand_idx).unwrap();
+            self.set_cache.remove(&rand_page);
+        }      
+       
+        self.set_cache.insert(page);        
+    }
+
+    /// Returns 1 if page is not in cache, 0 otherwise.
+    pub fn get_page (&mut self, page : usize, rand : &mut rand::rngs::ThreadRng) -> usize {
+        if self.set_cache.contains(&page) {
+            match self.cache_type {
+                CacheType::Lru => self.lru_update(page),
+                CacheType::Lfu => self.lfu_update(page),
+                CacheType::Rma => self.rma_update(page),
+                _ => (),
+            }
+            0
+        } else {
+            match self.cache_type {
+                CacheType::Fifo  => self.fifo_add(page),
+                CacheType::Fwf   => self.fwf_add(page),
+                CacheType::Rand  => self.rand_add(page, rand),
+                CacheType::Lru   => self.lru_add(page),
+                CacheType::Lfu   => self.lfu_add(page),
+                CacheType::Rma   => self.rma_add(page, rand),
+            }
+            1
         }
     }
 }
