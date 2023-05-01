@@ -36,7 +36,7 @@ fn experiment() {
         for bin_pack_type in bin_pack_types {
             let filename = format!("data/dist_{}bp_{}.txt", distribution.name(), bin_pack_type.name());
             let mut file = File::create(filename).unwrap();
-            
+
             let mut avg = 0.0;
             for seq in sequences.iter() {
                 let mut bin_pack = BinPack::new(bin_pack_type);
@@ -46,7 +46,7 @@ fn experiment() {
             avg /= num_of_tests as f64;
 
             let line = format!("{}", avg);
-            file.write(line.as_bytes()).unwrap();
+            file.write_all(line.as_bytes()).unwrap();
         }
     }
     

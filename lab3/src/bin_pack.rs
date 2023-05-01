@@ -44,7 +44,7 @@ impl BinPack {
         self.add_on_idx(r, idx_opt);
     }
 
-    pub fn pack(&mut self, rs: &Vec<f64>) {
+    pub fn pack(&mut self, rs: &[f64]) {
         for r in rs {
             self.add_val(*r);
         }
