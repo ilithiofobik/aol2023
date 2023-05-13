@@ -155,13 +155,13 @@ impl Migration {
     }
 }
 
-pub struct PageMigration {
-    page_struct : PageStructure,
-    migration : Migration,
+pub struct PageMigration<'a> {
+    page_struct : &'a PageStructure,
+    migration : &'a mut Migration,
 }
 
-impl PageMigration {
-    pub fn new(page_struct : PageStructure, migration : Migration) -> Self {
+impl<'a> PageMigration<'a> {
+    pub fn new(page_struct : &'a PageStructure, migration : &'a mut Migration) -> Self {
         PageMigration {
             page_struct,
             migration
@@ -169,6 +169,6 @@ impl PageMigration {
     }
 
     pub fn migrate(&mut self, page : u8) -> u64 {
-        self.migration.migrate(page, &self.page_struct)
+        self.migration.migrate(page, self.page_struct)
     }
 }

@@ -9,8 +9,8 @@ use std::io::prelude::*;
 
 const N: usize = 64;
 const D: u64 = 32;
-const REQ_LEN : usize = 1024;
-const NUM_OF_TESTS : usize = 1;
+const REQ_LEN : usize = 1_024;
+const NUM_OF_TESTS : usize = 100_000;
 
 fn experiment() {
     let page_structs =
@@ -19,7 +19,7 @@ fn experiment() {
             PageStructure::Torus(TorusStruct::new())
         ];
 
-    let migrations = 
+    let mut migrations = 
         [
             Migration::RandomFlip(RandomFlipMigration::new(D)),
             Migration::MoveToMin(MoveToMinMigration::new(D))
@@ -37,11 +37,11 @@ fn experiment() {
             sequences.push(distribution.gen_seq(REQ_LEN));
         }
 
-        for migration in migrations.iter() {
+        for migration in migrations.iter_mut() {
             for page_struct in page_structs.iter() {
-                let mut page_migration = PageMigration::new((*page_struct).clone(), (*migration).clone());
                 let filename = format!("data/{}_{}_{}.txt", distribution.name(), migration.name(), page_struct.name());
                 let mut file = File::create(filename).unwrap();
+                let mut page_migration = PageMigration::new(page_struct, migration);
 
                 let mut avg = 0.0;
                 for seq in sequences.iter() {
