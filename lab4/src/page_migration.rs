@@ -1,66 +1,45 @@
 use fastrand::Rng;
 
 #[derive(Clone)]
-pub struct HypercubeStruct {}
-#[derive(Clone)]
-pub struct TorusStruct {}
-
-impl HypercubeStruct {
-    pub fn new() -> Self {
-        HypercubeStruct {}
-    }
-
-    pub fn distance(&self, page1 : u8, page2 : u8) -> u64 {
-        ((page1 - 1) ^ (page2 - 1)).count_ones() as u64
-    }
-}
-
-impl TorusStruct {
-    pub fn new() -> Self {
-        TorusStruct {}
-    }
-
-    pub fn distance(&self, page1 : u8, page2 : u8) -> u64 {
-        let mut x = page1 - 1;
-        let mut y = page2 - 1;
-        let mut dist = 0;
-
-        for _ in 0..3 {
-            let a = x & 0b11;
-            let b = y & 0b11;
-
-            match a.abs_diff(b) {
-                1 | 3 => dist += 1,
-                2 => dist += 2,
-                _ => ()
-            }
-
-            x = x.rotate_right(2);
-            y = y.rotate_right(2);
-        }
-
-        dist
-    }
-}
-
-#[derive(Clone)]
 pub enum PageStructure {
-    Hypercube(HypercubeStruct),
-    Torus(TorusStruct)
+    Hypercube,
+    Torus
 }
 
 impl PageStructure {
     pub fn name (&self) -> &str {
         match self {
-            PageStructure::Hypercube(_) => "hypercube",
-            PageStructure::Torus(_) => "torus"
+            PageStructure::Hypercube => "hypercube",
+            PageStructure::Torus     => "torus"
         }
     }
 
     pub fn distance(&self, page1 : u8, page2 : u8) -> u64 {
         match self {
-            PageStructure::Hypercube(x) => x.distance(page1, page2),
-            PageStructure::Torus(x)         => x.distance(page1, page2)
+            PageStructure::Hypercube => 
+                ((page1 - 1) ^ (page2 - 1)).count_ones() as u64,
+                
+            PageStructure::Torus => {
+                let mut x = page1 - 1;
+                let mut y = page2 - 1;
+                let mut dist = 0;
+        
+                for _ in 0..3 {
+                    let a = x & 0b11;
+                    let b = y & 0b11;
+        
+                    match a.abs_diff(b) {
+                        1 | 3 => dist += 1,
+                        2 => dist += 2,
+                        _ => ()
+                    }
+        
+                    x = x.rotate_right(2);
+                    y = y.rotate_right(2);
+                }
+        
+                dist
+            }
         }
     }
 }

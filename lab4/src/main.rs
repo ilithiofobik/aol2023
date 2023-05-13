@@ -15,8 +15,8 @@ const NUM_OF_TESTS : usize = 100_000;
 fn experiment() {
     let page_structs =
         [
-            PageStructure::Hypercube(HypercubeStruct::new()),
-            PageStructure::Torus(TorusStruct::new())
+            PageStructure::Hypercube,
+            PageStructure::Torus
         ];
 
     let mut migrations = 
