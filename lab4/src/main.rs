@@ -8,19 +8,22 @@ use std::fs::File;
 use std::io::prelude::*;
 
 const N: usize = 64;
-const D: usize = 32;
+const D: u64 = 32;
+const REQ_LEN : usize = 1024;
+const NUM_OF_TESTS : usize = 1;
 
 fn experiment() {
-    let num_of_tests = 100_000;
-    let seq_len = 100;
+    let page_structs =
+        [
+            PageStructure::Hypercube(HypercubeStruct::new()),
+            PageStructure::Torus(TorusStruct::new())
+        ];
 
-    let bin_pack_types = [
-        BinPackType::Next,
-        BinPackType::First,
-        BinPackType::Best,
-        BinPackType::Worst,
-        BinPackType::Random
-    ];
+    let migrations = 
+        [
+            Migration::RandomFlip(RandomFlipMigration::new(D)),
+            Migration::MoveToMin(MoveToMinMigration::new(D))
+        ];
     
     let mut distributions = [
             Distribution::Uni(UniDistribution::new(N)),
@@ -29,27 +32,30 @@ fn experiment() {
         ];
 
     for distribution in distributions.iter_mut() { 
-        let mut sequences = Vec::with_capacity(num_of_tests);
-        for _ in 0..num_of_tests {
-            sequences.push(distribution.gen_seq(seq_len));
+        let mut sequences = Vec::with_capacity(NUM_OF_TESTS);
+        for _ in 0..NUM_OF_TESTS {
+            sequences.push(distribution.gen_seq(REQ_LEN));
         }
-        for bin_pack_type in bin_pack_types {
-            let filename = format!("data/dist_{}bp_{}.txt", distribution.name(), bin_pack_type.name());
-            let mut file = File::create(filename).unwrap();
 
-            let mut avg = 0.0;
-            for seq in sequences.iter() {
-                let mut bin_pack = BinPack::new(bin_pack_type);
-                bin_pack.pack(seq);
-                avg += (bin_pack.bins.len() as f64) / optimal_packing(seq);
+        for migration in migrations.iter() {
+            for page_struct in page_structs.iter() {
+                let mut page_migration = PageMigration::new((*page_struct).clone(), (*migration).clone());
+                let filename = format!("data/{}_{}_{}.txt", distribution.name(), migration.name(), page_struct.name());
+                let mut file = File::create(filename).unwrap();
+
+                let mut avg = 0.0;
+                for seq in sequences.iter() {
+                    for page in seq.iter() {
+                        avg += page_migration.migrate(*page) as f64;
+                    }
+                }
+                avg /= NUM_OF_TESTS as f64;
+
+                let line = format!("{}", avg);
+                file.write_all(line.as_bytes()).unwrap();
             }
-            avg /= num_of_tests as f64;
-
-            let line = format!("{}", avg);
-            file.write_all(line.as_bytes()).unwrap();
         }
-    }
-    
+    }    
 }
 
 fn main() {

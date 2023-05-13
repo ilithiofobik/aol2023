@@ -1,40 +1,40 @@
-use rand::{thread_rng, Rng};
+use fastrand::Rng;
 
 #[derive(Clone)]
 pub struct UniDistribution {
     n: usize,
-    pub generator: rand::rngs::ThreadRng
+    pub generator: Rng
 }
 
 impl UniDistribution {
     pub fn new(n: usize) -> Self {
         UniDistribution {
             n,
-            generator: thread_rng()
+            generator: Rng::new()
         }
     }
 
     fn generate(&mut self) -> usize {
-        self.generator.gen_range(1..=self.n)
+        self.generator.usize(1..=self.n)
     }
 }
 
 #[derive(Clone)]
 pub struct ArrDistribution {
     dist_vec: Vec<f64>,
-    pub generator: rand::rngs::ThreadRng
+    pub generator: Rng
 }
 
 impl ArrDistribution {
     fn new(dist_vec: Vec<f64>) -> Self {
         ArrDistribution {
             dist_vec,
-            generator: thread_rng()
+            generator: Rng::new()
         }
     }
 
     pub fn generate(&mut self) -> usize {
-        let r = self.generator.gen_range(0.0..1.0);
+        let r = self.generator.f64();
         self.dist_vec.iter().position(|&x| x > r).unwrap()
     }
 
@@ -89,16 +89,11 @@ impl Distribution {
         }
     }
 
-    pub fn gen_seq(&mut self, n: usize) -> Vec<f64> {
+    pub fn gen_seq(&mut self, n: usize) -> Vec<u8> {
         let mut seq = Vec::with_capacity(n);
-        let mut rand = thread_rng();
-
-        while seq.len() < n {
-            let r: f64 = rand.gen_range(0.0..=1.0);
-            let k = self.generate();
-            for _ in 0..std::cmp::min(k, n - seq.len()) {
-                seq.push(r);
-            }
+        
+        for _ in 0..n {
+            seq.push(self.generate() as u8);
         }
 
         seq
