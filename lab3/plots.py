@@ -2,7 +2,7 @@ def read_float(bin_pack, distr):
     filename = f"data/dist_{distr}bp_{bin_pack}.txt"
     file = open(filename, 'r')
     line = file.readline()
-    return float(line)
+    return round(float(line), 3)
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -31,8 +31,7 @@ def plot_heatmap():
     # Loop over data dimensions and create text annotations.
     for i in range(len(distrs)):
         for j in range(len(bin_packs)):
-            text = ax.text(j, i, data[i, j],
-                        ha="center", va="center", color="w")
+            ax.text(j, i, data[i, j], ha="center", va="center", color="w")
 
     ax.set_title("Average competitive ratio")
     fig.tight_layout()

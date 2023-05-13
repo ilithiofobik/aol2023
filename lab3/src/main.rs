@@ -6,34 +6,34 @@ use distribution::*;
 
 use std::fs::File;
 use std::io::prelude::*;
+use fastrand::Rng;
+
+const NUM_OF_TESTS: usize = 100_000;
+const SEQ_LEN: usize = 100;
+const N: usize = 10;
 
 fn experiment() {
-    let num_of_tests = 100_000;
-    let seq_len = 100;
-    let n = 10;
-
-    let bin_pack_types = [
-        BinPackType::Next,
-        BinPackType::First,
-        BinPackType::Best,
-        BinPackType::Worst,
-        BinPackType::Random
+    let mut bin_pack_types = [
+        BinPacking::Next,
+        BinPacking::First,
+        BinPacking::Best,
+        BinPacking::Worst,
+        BinPacking::Random(Rng::new())
     ];
-
     
     let mut distributions = [
-            Distribution::Uni(UniDistribution::new(n)),
-            Distribution::Har(ArrDistribution::harmonic(n)),
-            Distribution::Bih(ArrDistribution::biharmonic(n)),
-            Distribution::Geo(GeoDistribution::new(0.5, n))
-        ];
+        Distribution::Uni(UniDistribution::new(N)),
+        Distribution::Har(ArrDistribution::harmonic(N)),
+        Distribution::Bih(ArrDistribution::biharmonic(N)),
+        Distribution::Geo(GeoDistribution::new(0.5, N))
+    ];
 
     for distribution in distributions.iter_mut() { 
-        let mut sequences = Vec::with_capacity(num_of_tests);
-        for _ in 0..num_of_tests {
-            sequences.push(distribution.gen_seq(seq_len));
+        let mut sequences = Vec::with_capacity(NUM_OF_TESTS);
+        for _ in 0..NUM_OF_TESTS {
+            sequences.push(distribution.gen_seq(SEQ_LEN));
         }
-        for bin_pack_type in bin_pack_types {
+        for bin_pack_type in bin_pack_types.iter_mut() {
             let filename = format!("data/dist_{}bp_{}.txt", distribution.name(), bin_pack_type.name());
             let mut file = File::create(filename).unwrap();
 
@@ -41,9 +41,9 @@ fn experiment() {
             for seq in sequences.iter() {
                 let mut bin_pack = BinPack::new(bin_pack_type);
                 bin_pack.pack(seq);
-                avg += (bin_pack.bins.len() as f64) / optimal_packing(seq);
+                avg += (bin_pack.num_of_bins() as f64) / optimal_packing(seq);
             }
-            avg /= num_of_tests as f64;
+            avg /= NUM_OF_TESTS as f64;
 
             let line = format!("{}", avg);
             file.write_all(line.as_bytes()).unwrap();
