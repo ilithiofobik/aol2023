@@ -55,7 +55,6 @@ impl BinPacking {
             BinPacking::Random(rand) => {
                 let len = 
                     filtered_pairs!(bins, r)
-                    .clone()
                     .count();
         
                 if len > 0 {
