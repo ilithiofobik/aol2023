@@ -1,6 +1,5 @@
 use fastrand::Rng;
 
-#[derive(Clone)]
 pub struct UniDistribution {
     n: usize,
     pub generator: Rng
@@ -19,7 +18,6 @@ impl UniDistribution {
     }
 }
 
-#[derive(Clone)]
 pub struct ArrDistribution {
     dist_vec: Vec<f64>,
     pub generator: Rng
@@ -65,7 +63,6 @@ impl ArrDistribution {
     }
 }
 
-#[derive(Clone)]
 pub enum Distribution {
     Uni(UniDistribution),
     Har(ArrDistribution),

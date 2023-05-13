@@ -18,7 +18,7 @@ impl PageStructure {
         match self {
             PageStructure::Hypercube => 
                 ((page1 - 1) ^ (page2 - 1)).count_ones() as u64,
-                
+
             PageStructure::Torus => {
                 let mut x = page1 - 1;
                 let mut y = page2 - 1;
@@ -69,7 +69,6 @@ impl RandomFlipMigration {
     }
 }
 
-#[derive(Clone)]
 pub struct MoveToMinMigration {
     d : u64,
     current_page : u8, 
@@ -112,7 +111,6 @@ impl MoveToMinMigration {
     }
 }
 
-#[derive(Clone)]
 pub enum Migration {
     RandomFlip(RandomFlipMigration),
     MoveToMin(MoveToMinMigration)
