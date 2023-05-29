@@ -7,6 +7,9 @@ use distribution::*;
 use std::fs::File;
 use std::io::prelude::*;
 
+const N: usize = 10;
+const BIN_SEQ: usize = 100;
+
 fn experiment() {
     let mut rand = rand::thread_rng();
     let num_of_tests = 1_000_000;
