@@ -38,8 +38,7 @@ enum Request {
 }
 
 fn init_processors() -> [Processor; NUM_OF_PROCESSORS] {
-    let mut processors = 
-        [Processor::new_empty(); NUM_OF_PROCESSORS];
+    let mut processors: [Processor; 64] = [Processor::new_empty(); 64];
     processors[0] = Processor::new_full();
     processors
 }
@@ -64,7 +63,7 @@ pub fn page_allocation(d: u128, p: f64) -> (f64, f64) {
     let mut processors = init_processors();
 
     // 1. While c < D, if a read is initiated by p, or if a write is initiated by p, and
-    // Count is waiting, increase e by 1.
+    // Count is waiting, increase c by 1.
     // 2. Replicate a copy of the file to p.
     // 3. While c > 0, if a write is initiated by any other processor, decrease c by 1.
     // 4. If p holds the last copy of the file, wait until it is replicated by some other
@@ -77,55 +76,66 @@ pub fn page_allocation(d: u128, p: f64) -> (f64, f64) {
         let request = rand_request(&rand, p);
         let state = processors[pid].state;
 
-        match (request, state) {
-            (Request::Read, ProcessorState::Increase) => {
-                // reading cost
-                total_cost += 1;
-                processors[pid].count += 1;
-
-                if processors[pid].count == d {
-                    // copying cost
-                    total_cost += d;
-                    
-                    curr_copies += 1;
-                    max_copies = max_copies.max(curr_copies);
-                    processors[pid].state = ProcessorState::Decrease;
-                }
-            },
-            (Request::Write, ProcessorState::Increase) => {
-                // writing cost
-                total_cost += curr_copies;
-
-                if curr_copies == 1 {
+        match request {
+            Request::Read => {
+                match state {
+                    ProcessorState::Increase => {
+                    // reading cost
+                    total_cost += 1;
                     processors[pid].count += 1;
-                }
-                
-                if processors[pid].count == d {
-                    // copying cost
-                    total_cost += d;
-                    curr_copies += 1;
-                    max_copies = max_copies.max(curr_copies);
-                    processors[pid].state = ProcessorState::Decrease;
-                }
-            },
-            (Request::Write, ProcessorState::Decrease) => {
-                // writing cost
-                total_cost += curr_copies - 1;
-                
-                processors[pid].count -= 1;
 
-                if processors[pid].count == 0 {
-                    processors[pid].state = ProcessorState::Hold;
+                    if processors[pid].count == d {
+                        // copying cost
+                        total_cost += d;
+                        
+                        curr_copies += 1;
+                        max_copies = max_copies.max(curr_copies);
+                        processors[pid].state = ProcessorState::Decrease;
+                    }
+                },
+                _ => ()
+            }
+        },
+            Request::Write => {
+                for i in 0..64 {
+                    if processors[i].state == ProcessorState::Decrease && i != pid {
+                        // writing cost
+                        total_cost += curr_copies - 1;
+                                            
+                        processors[i].count -= 1;
+
+                        if processors[i].count == 0 {
+                            processors[i].state = ProcessorState::Hold;
+                        }
+                    }
                 }
-            },
-            (Request::Write, ProcessorState::Hold) => {
-                // writing cost
-                total_cost += curr_copies - 1;
-            },
-            _ => ()
+
+                match state {
+                    ProcessorState::Increase => {
+                        // writing cost
+                        total_cost += curr_copies;
+
+                        if curr_copies == 1 {
+                            processors[pid].count += 1;
+                        }
+                        
+                        if processors[pid].count == d {
+                            // copying cost
+                            total_cost += d;
+                            curr_copies += 1;
+                            max_copies = max_copies.max(curr_copies);
+                            processors[pid].state = ProcessorState::Decrease;
+                        }
+                    },
+                    _ => {
+                        // writing cost
+                        total_cost += curr_copies - 1;
+                    }
+                }
+            }
         }
 
-        if curr_copies > 1 {
+        if curr_copies > 1 {    
             for processor in processors.iter_mut() {
                 if processor.state == ProcessorState::Hold {
                     curr_copies -= 1;
